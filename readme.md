@@ -79,7 +79,4 @@ python main.py
 * **Multi-Source Reasoning:** The agent successfully merges **live data** (SQL) with **expert knowledge** (Manual).
 * **Autonomous Tool Use:** The model determines which functions to call without hardcoded "if/else" logic.
 
----
-
-*Developed as a high-speed technical demonstration of LangGraph and LLM Orchestration.*
 
