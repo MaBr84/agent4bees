@@ -1,24 +1,51 @@
 """
 main.py
 
-SPECIFICATIONS:
----------------------------------------------------------
-1. Role: Setup & Initialization (Pre-flight checks).
-
-2. Responsibilities:
-   - Environment Config:
-     - Check for existence of `.env`.
-     - Validate presence of OPENAI_API_KEY.
-   
-   - Database Initialization:
-     - Check if SQLite DB exists, if not, create it.
-     - Seed SQLite DB with mock sensor data (Temperature: 34.5C, etc.).
-   
-   - Vector Store Initialization:
-     - Check if `doc/` contains PDFs.
-     - (Optional for PoC) Run the ingestion pipeline to create the Vector DB embeddings if missing.
-
-3. Usage:
-   - This script should be run ONCE before using `agent.py`.
-   - Output: Success message "Environment ready. Run 'python agent.py' to consult the Hive SME."
+Setup & Initialization Script.
+Run this ONCE to prepare the environment and databases.
 """
+
+import os
+import sys
+from dotenv import load_dotenv
+
+# Import initialization functions from our app
+from app.database import init_sql_db, init_vector_db
+
+def main():
+    print("🐝 Hive SME: System Initialization")
+    print("----------------------------------")
+
+    # 1. Check Environment
+    print("[1/3] Checking Environment...")
+    load_dotenv()
+    if not os.getenv("OPENAI_API_KEY"):
+        print("❌ Error: OPENAI_API_KEY is missing from .env file.")
+        print("   Please create a .env file with your API key.")
+        sys.exit(1)
+    print("✅ Environment variables loaded.")
+
+    # 2. Initialize SQL Database
+    print("\n[2/3] Initializing SQL Database...")
+    try:
+        init_sql_db()
+        print("✅ SQL Database ready.")
+    except Exception as e:
+        print(f"❌ Error initializing SQL DB: {e}")
+        sys.exit(1)
+
+    # 3. Initialize Vector Database
+    print("\n[3/3] Initializing Vector Database...")
+    try:
+        init_vector_db()
+        print("✅ Vector Database initialization attempt complete.")
+    except Exception as e:
+        print(f"❌ Error initializing Vector DB: {e}")
+        # Don't exit here, might just be missing pdfs
+    
+    print("\n----------------------------------")
+    print("🎉 System Ready! You can now run the agent:")
+    print("   python agent.py")
+
+if __name__ == "__main__":
+    main()

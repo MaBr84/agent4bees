@@ -25,7 +25,9 @@ If you have not installed Python yet:
 Run the following command in your terminal:
 ```bash
 pip install python-dotenv langchain-openai langgraph
-
+pip install langchain-openai langchain-chroma pypdf
+pip install langchain_community
+pip install --upgrade langchain-core langchain-openai langchain-chroma langchain-community pydantic
 ```
 
 ### 3. Configure Environment Variables
