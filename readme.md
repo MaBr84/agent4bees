@@ -9,6 +9,14 @@ A proof-of-concept AI agent built in 60 minutes. This project demonstrates how t
 
 To fit a one-hour deadline, this project uses a `.env` file for secure API management.
 
+### 0. Install Python (Windows)
+
+If you have not installed Python yet:
+1. Open the Microsoft Store.
+2. Search for **Python 3.12** (or latest).
+3. Click **Get** or **Install**.
+4. Verify by opening a terminal (PowerShell) and typing `python --version`.
+
 ### 1. Get your OpenAI API Key
 * Go to the [OpenAI Dashboard](https://platform.openai.com/).
 * Create a new secret key named **"Hive Demo"** and copy it.
@@ -22,11 +30,10 @@ pip install python-dotenv langchain-openai langgraph
 
 ### 3. Configure Environment Variables
 
-Create a file named `.env` in the root directory and paste your key:
+Create a file named `.env` in this folder (same location as `readme.md`) and paste your key:
 
 ```plaintext
 OPENAI_API_KEY=sk-your-actual-key-here
-
 ```
 
 ---
@@ -39,10 +46,10 @@ The system is divided into three distinct phases:
 
 This file simulates our data sources:
 
-* **SQL Database:** A mock SQLite DB containing sensor metadata (e.g., Sensor S1, MQTT upload frequencies).
-* **The "Bee Manual":** A tool that provides biological thresholds (e.g., ideal hive temperature is 32-35°C).
+* **SQL Database (via MCP):** A mock SQLite DB containing sensor metadata (e.g., Sensor S1, MQTT upload frequencies), accessed using the **Model Context Protocol (MCP)**.
+* **The "Bee Manual":** A PDF document (located in `doc/`) embedded into a **vector database**, also accessed via **MCP**, allowing for unified retrieval of biological thresholds and context.
 
-### Phase 2: The Orchestrator (`main.py`)
+### Phase 2: The Agent Logic (`agent.py`)
 
 The "brain" of the operation. It uses a **ReAct Agent** pattern to:
 
@@ -50,16 +57,23 @@ The "brain" of the operation. It uses a **ReAct Agent** pattern to:
 2. Decide which tool to call (`get_hive_data` or `bee_manual`).
 3. Synthesize a human-readable health report.
 
+### Phase 3: The Setup (`main.py`)
+
+This script handles initialization and preparation tasks:
+* Creating and populating the mock database.
+* Setting up any necessary prerequisites before the agent runs.
+
 ---
 
 ## 🛠️ How to Run the Demo
 
-Execute the main script to see the agent in action:
+Execute the agent script directly:
 
 ```bash
-python main.py
-
+python agent.py
 ```
+
+*Note: Run `python main.py` first to initialize the database/environment.*
 
 ### Example Query
 
