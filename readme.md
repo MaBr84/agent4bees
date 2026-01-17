@@ -42,57 +42,56 @@ OPENAI_API_KEY=sk-your-actual-key-here
 
 ## 🧠 Project Architecture
 
-The system is divided into three distinct phases:
+The system follows a modular architecture, separating data logic, agent orchestration, and initialization:
 
-### Phase 1: The Knowledge Base (`database.py`)
+### 1. The Application Layer (`app/`)
+The core logic resides in the `app/` package:
+*   **`database.py`**: The "Connector" layer. It handles:
+    *   **SQL Operations**: Interacting with the mock SQLite database for sensor data.
+    *   **Vector Operations**: Interacting with the Chroma vector store for semantic search in the PDF manual.
+*   **`models.py`**:  Defines the data structures (Pydantic models) used throughout the application to ensure data consistency.
+*   **`seed_data.py`**:  Contains the logic and sample data used to populate the mock database during initialization.
 
-This file simulates our data sources:
+### 2. The Agent Logic (`agent.py`)
+The intelligent core of the system. It uses **LangGraph** to:
+1.  **Reason**: Analyze user queries to understand intent.
+2.  **Act**:  Decide whether to query the SQL database (for sensor stats) or the Vector store (for biological facts).
+3.  **Synthesize**:  Combine retrieved information into a coherent, expert-level response.
 
-* **SQL Database (via MCP):** A mock SQLite DB containing sensor metadata (e.g., Sensor S1, MQTT upload frequencies), accessed using the **Model Context Protocol (MCP)**.
-* **The "Bee Manual":** A PDF document (located in `doc/`) embedded into a **vector database**, also accessed via **MCP**, allowing for unified retrieval of biological thresholds and context.
-
-### Phase 2: The Agent Logic (`agent.py`)
-
-The "brain" of the operation. It uses a **ReAct Agent** pattern to:
-
-1. Analyze a user query.
-2. Decide which tool to call (`get_hive_data` or `bee_manual`).
-3. Synthesize a human-readable health report.
-
-### Phase 3: The Setup (`main.py`)
-
-This script handles initialization and preparation tasks:
-* Creating and populating the mock database.
-* Setting up any necessary prerequisites before the agent runs.
+### 3. The Initialization (`main.py`)
+The system bootstrapper. It performs the necessary checks and setup steps:
+*   Validates environment variables (API keys).
+*   Initializes and seeds the SQL database.
+*   Sets up the Vector store and ingests the PDF documents.
 
 ---
 
 ## 🛠️ How to Run the Demo
 
-Execute the agent script directly:
+### Step 1: Initialize the System
+Run the setup script to prepare the database and environment:
+```bash
+python main.py
+```
 
+### Step 2: Launch the Agent
+Start the interactive agent loop:
 ```bash
 python agent.py
 ```
 
-*Note: Run `python main.py` first to initialize the database/environment.*
-
 ### Example Query
-
 > *"What is the temperature right now, is it healthy, and how often is this data loaded?"*
 
 **The AI's Logic Path:**
-
-1. **Fetch SQL Data:** Retrieves current temp (34.5°C) and upload frequency (15 mins).
-2. **Check Biology Manual:** Validates that 34.5°C falls within the healthy 32-35°C range.
-3. **Synthesis:** Combines both technical and biological data into one response.
+1.  **Fetch SQL Data (`get_hive_data`)**: Retrieves current temp (e.g., 34.5°C) and generic metadata.
+2.  **Check Biology Manual (`search_bee_manual`)**: Validates that 34.5°C falls within the healthy 32-35°C range.
+3.  **Synthesis**:  Combines live data + expert knowledge + chat history into one helpful answer.
 
 ---
 
-## 📈 Demo Highlights ("The Sizzle")
+## 📈 Demo Highlights
 
-* **Security First:** Uses `.env` variables to prevent hardcoding sensitive keys.
-* **Multi-Source Reasoning:** The agent successfully merges **live data** (SQL) with **expert knowledge** (Manual).
-* **Autonomous Tool Use:** The model determines which functions to call without hardcoded "if/else" logic.
-
-
+*   **Secure Configuration**: Uses `.env` for API key management.
+*   **Hybrid Intelligence**: Seamlessly merges validatable SQL data with unstructured knowledge bases.
+*   **Agentic Workflow**: Uses LangGraph state machines instead of brittle if/else chains.
