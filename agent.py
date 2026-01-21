@@ -7,11 +7,13 @@ Uses LangGraph to orchestrate reasoning and tool usage.
 
 import os
 import sys
-from typing import Annotated, Literal, TypedDict, Union
+from typing import Annotated, Literal, Union
 
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
+from langchain_core.messages import BaseMessage
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.graph.message import add_messages
@@ -27,7 +29,10 @@ if not os.getenv("OPENAI_API_KEY"):
     sys.exit(1)
 
 # 2. Define Tools
-@tool
+class HiveQuery(BaseModel):
+    query: str = Field(description="The natural language query to search hive data.")
+
+@tool(args_schema=HiveQuery)
 def tool_get_hive_data(query: str) -> str:
     """
     Query the Hive SQL Database for sensor readings.
@@ -35,7 +40,10 @@ def tool_get_hive_data(query: str) -> str:
     """
     return get_hive_data(query)
 
-@tool
+class ManualQuery(BaseModel):
+    query: str = Field(description="The natural language query to search the manual.")
+
+@tool(args_schema=ManualQuery)
 def tool_search_bee_manual(query: str) -> str:
     """
     Search the Bee Manual (PDF Knowledge Base) for biological facts.
@@ -46,15 +54,15 @@ def tool_search_bee_manual(query: str) -> str:
 tools = [tool_get_hive_data, tool_search_bee_manual]
 
 # 3. Define State
-class AgentState(TypedDict):
-    messages: Annotated[list, add_messages]
+class AgentState(BaseModel):
+    messages: Annotated[list[BaseMessage], add_messages]
 
 # 4. Define Nodes
-def agent_node(state: AgentState):
+def agent_node(state: AgentState) -> dict[str, list[BaseMessage]]:
     """
     The main agent node. Decides what to do next.
     """
-    messages = state["messages"]
+    messages = state.messages
     model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
     model = model.bind_tools(tools)
     response = model.invoke(messages)
@@ -96,7 +104,6 @@ if __name__ == "__main__":
             
             # Stream events or just get final state. For CLI, streaming is nicer but simple invoke works.
             for event in app.stream(inputs, stream_mode="values"):
-                # We can inspect intermediate steps here if we want
                 pass
                 
             # extracting final response

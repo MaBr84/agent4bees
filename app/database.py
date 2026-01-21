@@ -112,7 +112,7 @@ def get_hive_data(query_string: str) -> str:
         sql += " AND type = 'humidity'"
     elif "weight" in query_lower:
         sql += " AND type = 'weight'"
-        
+    
     cursor.execute(sql, params)
     rows: List[sqlite3.Row] = cursor.fetchall()
     conn.close()
